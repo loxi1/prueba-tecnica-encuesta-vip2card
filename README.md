@@ -12,8 +12,8 @@ es necesario copiarlo para crear el `.env`.
 Clonar el repositorio y entrar al directorio:
 
 ``` bash
-git clone https://github.com/loxi1/vip2cars.git
-cd vip2cars
+git clone https://github.com/loxi1/prueba-tecnica-encuesta-vip2card
+cd prueba-tecnica-encuesta-vip2card
 ```
 
 ------------------------------------------------------------------------
