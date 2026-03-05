@@ -1,27 +1,68 @@
-# VIP2CARS --- Levantar el proyecto
+# VIP2CARS --- Laravel + Docker
 
-Este proyecto está construido con **Laravel** y se ejecuta usando
-**Docker**.\
-El repositorio **ya incluye el archivo `.env.example`**, por lo que solo
-es necesario copiarlo para crear el `.env`.
+Proyecto de prueba técnica construido con **Laravel 11**, **MySQL
+(MariaDB)**, **Nginx** y **Docker Compose**.
+
+Incluye:
+
+-   Laravel 11
+-   PHP 8.3 (FPM)
+-   Nginx
+-   MariaDB
+-   Node + Vite
+-   Datos de demostración mediante Seeders
 
 ------------------------------------------------------------------------
 
-# 1. Levantar el proyecto
+# Requisitos
 
-Clonar el repositorio y entrar al directorio:
+Tener instalado:
+
+-   Docker
+-   Docker Compose
+-   Git
+
+------------------------------------------------------------------------
+
+# Levantar el proyecto
+
+Clonar el repositorio:
 
 ``` bash
-git clone https://github.com/loxi1/prueba-tecnica-encuesta-vip2card
+git clone https://github.com/loxi1/prueba-tecnica-encuesta-vip2card.git
 cd prueba-tecnica-encuesta-vip2card
 ```
 
 ------------------------------------------------------------------------
 
-# 2. Crear archivo `.env`
+# 1. Reiniciar contenedores (opcional pero recomendado)
 
-El proyecto ya contiene `.env.example`.\
-Solo debes copiarlo:
+Esto elimina contenedores y volúmenes para empezar limpio.
+
+``` bash
+docker compose down -v
+```
+
+------------------------------------------------------------------------
+
+# 2. Levantar contenedores
+
+``` bash
+docker compose up -d --build
+```
+
+Esto iniciará:
+
+-   app (PHP-FPM)
+-   web (Nginx)
+-   db (MariaDB)
+-   node (Vite)
+
+------------------------------------------------------------------------
+
+# 3. Crear archivo .env
+
+El repositorio ya incluye `.env.example`.
 
 ``` bash
 cp src/.env.example src/.env
@@ -29,35 +70,75 @@ cp src/.env.example src/.env
 
 ------------------------------------------------------------------------
 
-# 3. Levantar contenedores Docker
-
-``` bash
-docker compose up -d --build
-```
-
-Esto levantará:
-
--   PHP / Laravel
--   Nginx
--   Base de datos (si está configurada)
--   Contenedor Node para assets
-
-------------------------------------------------------------------------
-
-# 4. Generar APP_KEY
-
-Laravel requiere una clave de aplicación.
+# 4. Instalar dependencias PHP
 
 ``` bash
 docker compose exec app composer install
+```
+
+------------------------------------------------------------------------
+
+# 5. Permisos requeridos por Laravel
+
+``` bash
+docker compose exec app sh -lc '
+mkdir -p bootstrap/cache storage/framework/{cache,sessions,views} storage/logs &&
+chmod -R 775 bootstrap/cache storage &&
+chown -R www-data:www-data bootstrap/cache storage 2>/dev/null || true
+'
+```
+
+------------------------------------------------------------------------
+
+# 6. Generar APP_KEY
+
+``` bash
 docker compose exec app php artisan key:generate
 ```
 
 ------------------------------------------------------------------------
 
-# 5. Crear la base de datos
+# 7. Migraciones y Seeders
 
-Ejecutar migraciones y seeders:
+``` bash
+docker compose exec app php artisan migrate:fresh --seed
+```
+
+Esto cargará datos de demostración.
+
+------------------------------------------------------------------------
+
+# 8. Compilar frontend
+
+``` bash
+docker compose exec node sh -lc "npm install && npm run build"
+```
+
+------------------------------------------------------------------------
+
+# Acceder al sistema
+
+Abrir en el navegador:
+
+http://localhost:8080
+
+------------------------------------------------------------------------
+
+# Comandos útiles
+
+Ver logs Laravel:
+
+``` bash
+docker compose exec app tail -n 100 storage/logs/laravel.log
+```
+
+Ver logs nginx:
+
+``` bash
+docker compose logs web
+```
+
+Resetear base de datos:
 
 ``` bash
 docker compose exec app php artisan migrate:fresh --seed
@@ -65,33 +146,7 @@ docker compose exec app php artisan migrate:fresh --seed
 
 ------------------------------------------------------------------------
 
-# 6. Compilar assets (Tailwind / Vite)
-
-``` bash
-docker compose up -d node
-docker compose exec node sh -lc "npm install && npm run build"
-docker compose stop node
-```
-
-------------------------------------------------------------------------
-
-# 7. Limpiar cache de Laravel
-
-``` bash
-docker compose exec app php artisan optimize:clear
-```
-
-------------------------------------------------------------------------
-
-# 8. Acceder al proyecto
-
-Abrir en el navegador:
-
-    http://localhost
-
-------------------------------------------------------------------------
-
-# Estructura relevante del proyecto
+# Estructura del proyecto
 
     vip2cars/
     │
@@ -100,18 +155,27 @@ Abrir en el navegador:
     │
     └── src/
         ├── .env.example
-        ├── .env
-        ├── artisan
         ├── app/
+        ├── bootstrap/
         ├── database/
-        └── routes/
+        ├── public/
+        ├── resources/
+        ├── routes/
+        └── storage/
 
 ------------------------------------------------------------------------
 
-# Notas importantes
+# Datos demo
 
--   `.env.example` **sí se sube al repositorio**
--   `.env` **NO debe subirse a Git**
--   `APP_KEY` se genera al levantar el proyecto
--   Las migraciones crean las tablas necesarias del sistema
-# prueba-tecnica-encuesta-vip2card
+Administrador:
+
+email: anibal.cayetano@gmail.com\
+password: acme654123
+
+------------------------------------------------------------------------
+
+# Notas
+
+-   `.env` NO se sube al repositorio
+-   `.env.example` sí se versiona
+-   El proyecto incluye seeders con datos de prueba
